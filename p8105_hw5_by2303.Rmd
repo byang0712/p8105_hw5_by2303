@@ -102,14 +102,38 @@ path_df =
   separate(path2, c("group", "id")) %>% 
   unnest() %>% 
   select(id, group, everything()) %>% 
-  select(-path)
-
-
+  select(-path) %>% 
+  pivot_longer(
+    week_1:week_8,
+    names_to = "week",
+    values_to = "observations"
+  )
 ```
 
 ## Problem 3
 ```{r}
+#data generating function 
+sim_data_fn = function(samp_size, mu = 0, sigma = 5) {
+  
+  sim_data = 
+    tibble(
+      x = rnorm(n = samp_size, mean = mu, sd = sigma)
+    )
+}
 
+# simulation results
+sim_results = 
+  tibble(mu = c(1,2,3,4,5,6)) %>% 
+  mutate(
+  output_lists = map(.x = mu, ~rerun(50, sim_data_fn(30, mu = .x)))
+        ) %>% 
+  unnest() %>% 
+  mutate(
+    t_tests = map2(.x = output_lists, .y = mu, ~t.test(x = .x, mu = .y, conf.level = 0.95)),
+    tidy_tests = map(.x = t_tests, ~broom::tidy(.x))
+         ) %>% 
+  unnest(tidy_tests) %>% 
+  select(mu, estimate, p.value)
 ```
 
 
