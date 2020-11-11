@@ -91,4 +91,25 @@ results_df %>%
 
 ## Problem 2 
 
+```{r}
+path_df = 
+  tibble(
+  path = list.files("./data/p2")
+) %>% 
+  mutate(path = str_c("./data/p2/", path),
+         data = map(.x = path, ~read_csv(.x)),
+         path2 = list.files("./data/p2")) %>%
+  separate(path2, c("group", "id")) %>% 
+  unnest() %>% 
+  select(id, group, everything()) %>% 
+  select(-path)
+
+
+```
+
+## Problem 3
+```{r}
+
+```
+
 
