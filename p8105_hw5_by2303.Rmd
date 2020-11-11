@@ -110,7 +110,10 @@ path_df =
   )
 ```
 
-## Problem 3
+## Problem 3  
+
+#### create simulation data
+
 ```{r}
 #data generating function 
 sim_data_fn = function(samp_size, mu = 0, sigma = 5) {
@@ -136,6 +139,20 @@ sim_results =
          ) %>% 
   unnest(tidy_tests) %>% 
   select(mu, estimate, p.value)
+```
+
+#### make plot  
+
+```{r}
+sim_results %>% 
+  group_by(mu) %>%
+  summarise(
+    p_sum = sum(p.value < 0.05),
+    count = n(),
+    p_prop = p_sum/count
+  ) %>% 
+  ggplot(aes(x = mu, y = p_prop)) +
+  geom_point()
 ```
 
 
