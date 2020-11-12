@@ -92,7 +92,7 @@ results_df %>%
 ## Problem 2 
 
 ```{r}
-path_df = 
+lgt_df = 
   tibble(
   path = list.files("./data/p2")
 ) %>% 
@@ -109,6 +109,18 @@ path_df =
     values_to = "observations"
   )
 ```
+
+```{r}
+lgt_df %>% 
+  mutate(id = as.factor(id),
+         week = as.factor(week)) %>% 
+  ggplot(aes(x = week, y = observations, group = id)) +
+  geom_line(aes(color = id)) +
+  facet_grid(.~group) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+```
+
 
 ## Problem 3  
 
