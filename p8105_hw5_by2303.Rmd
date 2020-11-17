@@ -111,13 +111,28 @@ lgt_df =
 ```
 
 ```{r}
+group_name = list(
+  `con` = "control_group",
+  `exp` = "experiment_group"
+)
+
+group_labeller = function(variable, value){
+  return(group_name[value])
+}
+  
+  
 lgt_df %>% 
   mutate(id = as.factor(id),
          week = as.factor(week)) %>% 
   ggplot(aes(x = week, y = observations, group = id)) +
   geom_line(aes(color = id)) +
-  facet_grid(.~group) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  facet_grid(.~group, labeller = group_labeller) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) + 
+  labs(
+    title = "Spaghetti Plot", 
+    x = "Week",
+    y = "Observation"
+  )
 
 ```
 
@@ -129,7 +144,6 @@ lgt_df %>%
 ```{r}
 #data generating function 
 sim_data_fn = function(samp_size, mu = 0, sigma = 5) {
-  
   sim_data = 
     tibble(
       x = rnorm(n = samp_size, mean = mu, sd = sigma)
