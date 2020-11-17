@@ -90,7 +90,9 @@ results_df %>%
 ```
 
 ## Problem 2 
-
+  
+Read in and tidy the datasets:
+  
 ```{r}
 lgt_df = 
   tibble(
@@ -109,6 +111,8 @@ lgt_df =
     values_to = "observations"
   )
 ```
+  
+A spaghetti plot showing observations on each subject over time:   
 
 ```{r}
 group_name = list(
@@ -135,7 +139,7 @@ lgt_df %>%
   )
 
 ```
-
+As we can see from the plot, observations in control group are showing a slight downward trend or fluctuating in the approximately same range during the study period; while observations in experiment groups are showing a upward trend in the study period. 
 
 ## Problem 3  
 
@@ -144,6 +148,7 @@ lgt_df %>%
 ```{r}
 #data generating function 
 sim_data_fn = function(samp_size, mu = 0, sigma = 5) {
+  
   sim_data = 
     tibble(
       x = rnorm(n = samp_size, mean = mu, sd = sigma)
@@ -154,13 +159,13 @@ sim_data_fn = function(samp_size, mu = 0, sigma = 5) {
 set.seed(1234) 
 
 sim_results = 
-  tibble(mu = c(1,2,3,4,5,6)) %>% 
+  tibble(mu = c(0,1,2,3,4,5,6)) %>% 
   mutate(
   output_lists = map(.x = mu, ~rerun(5000, sim_data_fn(30, mu = .x)))
         ) %>% 
   unnest() %>% 
   mutate(
-    t_tests = map2(.x = output_lists, .y = mu, ~t.test(x = .x, mu = .y, conf.level = 0.95)),
+    t_tests = map(.x = output_lists, ~t.test(x = .x, mu = 0, conf.level = 0.95)),
     tidy_tests = map(.x = t_tests, ~broom::tidy(.x))
          ) %>% 
   unnest(tidy_tests) %>% 
@@ -168,6 +173,8 @@ sim_results =
 ```
 
 #### make plot  
+
+* A plot showing the proportion of times the null was rejected (the power of the test) on the *y* axis and the true value of $\beta_1$ on the *x* axis.
 
 ```{r}
 sim_results %>% 
@@ -178,8 +185,17 @@ sim_results %>%
     p_prop = p_sum/count
   ) %>% 
   ggplot(aes(x = mu, y = p_prop)) +
-  geom_point()
+  geom_point() +
+  labs(
+    title = "Plot for Effect Size and Power",
+    x = "true mean",
+    y = "power of test"
+  )
 ```
+  
+comments: For any given population standard deviation, the greater the difference between the means of the null and alternative distributions, the greater the power.  
+
+* A plot showing the average estimate of $\hat{\mu}$ on the *y* axis and the true value of $\mu$ on the *x* axis:
 
 ```{r}
 sim_results %>% 
@@ -188,10 +204,24 @@ sim_results %>%
     average_est = mean(estimate)
   ) %>% 
   ggplot(aes(x = mu, y = average_est)) +
-  geom_point()
-```
+  geom_point() +
+  geom_line()+
+  labs(
+    x = "true mean",
+    y = "average estimate mean"
+  ) 
+``` 
+  
+* A plot showing the average estimate of $\hat{\mu}$ on the *y* axis and the true value of $\mu$ on the *x* axis only in samples for which the null was rejected:  
 
 ```{r}
+overall_df = 
+  sim_results %>% 
+  group_by(mu) %>% 
+  summarise(
+    average_est = mean(estimate)
+  ) 
+
 sim_results %>% 
   filter(p.value < 0.05) %>% 
   group_by(mu) %>% 
@@ -199,7 +229,14 @@ sim_results %>%
     average_est =  mean(estimate)
   ) %>% 
   ggplot(aes(x = mu, y = average_est)) +
-  geom_point()
+  geom_point() +
+  geom_line() + 
+  geom_point(data = overall_df) +
+  geom_line(data = overall_df, aes(x = mu, y = average_est), color = "red") + 
+  labs(
+    x = "true mean",
+    y = "average estimate mean"
+  )
   
 ```
-
+comments:  We can see that sample average of mu hat across tests for which the null is rejected is close to true mean for mu = 4,5 and 6; while for mu = 0, 1, 2, and 3, sample average of mu hat is significantly different from the true mean. We reject the null hypothesis when the estimate is significantly different from 0. Therefore for samples where mu is close to 0 (mu = 0, 1, 2, and 3), the average estimated mean will generally be larger than the true mean and for samples where mu is much larger than 0 (mu = 4, 5, 6), the average estimated mean will be approximately equal to the true mean. 
