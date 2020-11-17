@@ -102,7 +102,7 @@ lgt_df =
          data = map(.x = path, ~read_csv(.x)),
          path2 = list.files("./data/p2")) %>%
   separate(path2, c("group", "id")) %>% 
-  unnest() %>% 
+  unnest(cols = c(data)) %>% 
   select(id, group, everything()) %>% 
   select(-path) %>% 
   pivot_longer(
